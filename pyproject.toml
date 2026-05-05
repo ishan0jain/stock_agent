@@ -1,0 +1,15 @@
+[project]
+name = "stock-agents-api"
+version = "0.1.0"
+description = "FastAPI service for India-focused stock news, announcements, and global market context."
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.115.0,<1.0.0",
+  "uvicorn>=0.30.0,<1.0.0",
+]
+
+[project.optional-dependencies]
+dev = []
+
+[tool.setuptools.packages.find]
+include = ["stock_agents*"]
