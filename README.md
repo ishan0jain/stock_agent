@@ -42,6 +42,58 @@ python -m pip install -e .
 uvicorn stock_agents.app:app --reload
 ```
 
+## OHLCV Model Training
+
+Install the optional ML dependency:
+
+```powershell
+python -m pip install -e .[ml]
+```
+
+Train a CNN-LSTM model on an OHLCV JSON file and save the model:
+
+```powershell
+python trend_analyzer/ohlcv_lstm_cnn.py train --json trend_analyzer/ohlv.json --model-dir trend_analyzer/models/reliance --stock-name RELIANCE
+```
+
+Load the saved model and forecast the next 5 trading days from the latest rows in the JSON file:
+
+```powershell
+python trend_analyzer/ohlcv_lstm_cnn.py predict --json trend_analyzer/ohlv.json --model-dir trend_analyzer/models/reliance
+```
+
+Model API endpoints:
+
+- `POST /api/v1/model/train`
+- `POST /api/v1/model/predict`
+- `POST /api/v1/model/info`
+
+Example train request:
+
+```json
+{
+  "json_path": "trend_analyzer/ohlv.json",
+  "model_dir": "trend_analyzer/models/reliance",
+  "stock_name": "RELIANCE",
+  "window_size": 30,
+  "horizon": 5,
+  "target_field": "close",
+  "epochs": 50,
+  "batch_size": 32,
+  "train_ratio": 0.8,
+  "validation_split": 0.1
+}
+```
+
+Example predict request:
+
+```json
+{
+  "json_path": "trend_analyzer/ohlv.json",
+  "model_dir": "trend_analyzer/models/reliance"
+}
+```
+
 ## Example request
 
 ```json

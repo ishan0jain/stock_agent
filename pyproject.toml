@@ -10,6 +10,9 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = []
+ml = [
+  "tensorflow>=2.16.0,<3.0.0",
+]
 
 [tool.setuptools.packages.find]
-include = ["stock_agents*"]
+include = ["stock_agents*", "trend_analyzer*"]

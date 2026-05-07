@@ -2,9 +2,17 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
-from stock_agents.models import StockAnalysisRequest, TimeWindowRequest, WatchlistAnalysisRequest
+from stock_agents.model_service import get_ohlcv_model_info, predict_ohlcv_model, train_ohlcv_model
+from stock_agents.models import (
+    ModelInfoRequest,
+    ModelPredictRequest,
+    ModelTrainRequest,
+    StockAnalysisRequest,
+    TimeWindowRequest,
+    WatchlistAnalysisRequest,
+)
 from stock_agents.service import (
     IST,
     analyze_stock,
@@ -122,3 +130,54 @@ def stock_context(request: StockAnalysisRequest) -> dict:
 @app.post("/api/v1/context/watchlist")
 def watchlist_context(request: WatchlistAnalysisRequest) -> dict:
     return analyze_watchlist(request.stocks, request.options)
+
+
+@app.post("/api/v1/model/train")
+def model_train(request: ModelTrainRequest) -> dict:
+    try:
+        return train_ohlcv_model(
+            model_dir=request.model_dir,
+            stock_name=request.stock_name,
+            window_size=request.window_size,
+            horizon=request.horizon,
+            target_field=request.target_field,
+            epochs=request.epochs,
+            batch_size=request.batch_size,
+            train_ratio=request.train_ratio,
+            validation_split=request.validation_split,
+            json_path=request.json_path,
+            ohlcv_data=request.ohlcv_data,
+        )
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except (ValueError, OSError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except SystemExit as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/v1/model/predict")
+def model_predict(request: ModelPredictRequest) -> dict:
+    try:
+        return predict_ohlcv_model(
+            model_dir=request.model_dir,
+            json_path=request.json_path,
+            ohlcv_data=request.ohlcv_data,
+            output_path=request.output_path,
+        )
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except (ValueError, OSError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except SystemExit as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/v1/model/info")
+def model_info(request: ModelInfoRequest) -> dict:
+    try:
+        return get_ohlcv_model_info(request.model_dir)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except (ValueError, OSError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
