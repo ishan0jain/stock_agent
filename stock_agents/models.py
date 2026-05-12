@@ -12,6 +12,13 @@ class StockInput(BaseModel):
     aliases: list[str] = Field(default_factory=list)
     sector: str | None = None
     sector_keywords: list[str] = Field(default_factory=list)
+    fundamental_symbol: str | None = Field(
+        default=None,
+        description=(
+            "Optional provider-specific symbol for financial-statement and valuation lookups "
+            "(for example if the data vendor uses a different ticker format)."
+        ),
+    )
     nse_symbol: str | None = Field(
         default=None,
         description="NSE symbol if different from the primary symbol.",
@@ -157,3 +164,85 @@ class ModelPredictRequest(OhlcvDataSourceRequest):
         if not value:
             raise ValueError("path values cannot be empty")
         return value
+
+
+class PredictionStoreRequest(BaseModel):
+    stock: StockInput
+    prediction_made_at: datetime | None = Field(
+        default=None,
+        description="Timestamp when the prediction was created. Defaults to now in IST.",
+    )
+    prediction_for_date: datetime | None = Field(
+        default=None,
+        description="The main date being predicted. Defaults to the first forecast date when available.",
+    )
+    reference_price: float | None = Field(
+        default=None,
+        gt=0.0,
+        description="Latest known actual price at prediction time, used to convert predicted value into a percent move.",
+    )
+    target_field: Literal["open", "high", "low", "close", "volume"] = Field(default="close")
+    forecast_dates: list[str] = Field(default_factory=list, max_length=30)
+    predicted_values: list[float] = Field(default_factory=list, max_length=30)
+    predicted_direction: Literal["up", "down", "flat"] | None = None
+    predicted_change_pct: float | None = None
+    prediction_source: str = Field(default="ohlcv_model")
+    confidence: float | None = Field(default=None, ge=0.0, le=1.0)
+    model_dir: str | None = None
+    notes: str | None = None
+
+    @model_validator(mode="after")
+    def validate_prediction_payload(self) -> "PredictionStoreRequest":
+        if self.forecast_dates and len(self.forecast_dates) != len(self.predicted_values):
+            raise ValueError("forecast_dates and predicted_values must have the same length")
+        if not self.forecast_dates and not self.predicted_values and self.predicted_direction is None and self.predicted_change_pct is None:
+            raise ValueError(
+                "provide forecast values or an explicit predicted direction/change to store a prediction"
+            )
+        return self
+
+
+class PredictionReviewRequest(BaseModel):
+    prediction_id: str = Field(..., description="Identifier returned when the prediction was stored.")
+    actual_for_date: datetime | None = Field(
+        default=None,
+        description="Date being evaluated. Defaults to the stored prediction target date.",
+    )
+    previous_close: float | None = Field(
+        default=None,
+        gt=0.0,
+        description="Previous close used with actual_close to derive the daily percent move.",
+    )
+    actual_close: float | None = Field(
+        default=None,
+        gt=0.0,
+        description="Actual closing price for the reviewed day.",
+    )
+    actual_change_pct: float | None = Field(
+        default=None,
+        description="Actual percent move for the reviewed day. If omitted, it is derived from actual_close and previous_close/reference_price.",
+    )
+    analyst_notes: str | None = None
+    auto_fetch_context: bool = Field(
+        default=True,
+        description="When true, fetch stock/news context between the prediction time and the reviewed day.",
+    )
+    options: AnalysisOptions = Field(default_factory=AnalysisOptions)
+
+    @field_validator("prediction_id")
+    @classmethod
+    def validate_prediction_id(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("prediction_id cannot be empty")
+        return value
+
+    @model_validator(mode="after")
+    def validate_actual_payload(self) -> "PredictionReviewRequest":
+        if self.actual_change_pct is None and self.actual_close is None:
+            raise ValueError("provide actual_change_pct or actual_close")
+        return self
+
+
+class AgentMemoryRequest(BaseModel):
+    stock: StockInput

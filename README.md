@@ -21,6 +21,10 @@ FastAPI service for a stock or watchlist that returns:
 - `POST /api/v1/markets/macro-cues`
 - `POST /api/v1/context/stock`
 - `POST /api/v1/context/watchlist`
+- `POST /api/v1/fundamentals/company`
+- `POST /api/v1/feedback/predictions/store`
+- `POST /api/v1/feedback/predictions/review`
+- `POST /api/v1/feedback/memory`
 
 ## Providers
 
@@ -32,6 +36,10 @@ Broad India business news:
 - RSS feeds from Indian business publishers
 
 Global markets, commodities, FX, and yields:
+
+- `Alpha Vantage` via `ALPHAVANTAGE_API_KEY`
+
+Fundamental and valuation reports:
 
 - `Alpha Vantage` via `ALPHAVANTAGE_API_KEY`
 
@@ -104,6 +112,7 @@ Example predict request:
     "aliases": ["RIL", "Reliance Industries"],
     "sector": "Oil & Gas",
     "sector_keywords": ["refining", "petrochemicals", "telecom", "retail"],
+    "fundamental_symbol": "RELIANCE.NSE",
     "nse_symbol": "RELIANCE"
   },
   "options": {
@@ -111,3 +120,30 @@ Example predict request:
   }
 }
 ```
+
+## Company Fundamentals
+
+Use `POST /api/v1/fundamentals/company` to fetch valuation and financial-statement context for a single company. The response includes:
+
+- P/E, PEG, price-to-book, price-to-sales, EV multiples, dividend yield
+- margins, ROA, ROE, revenue and earnings growth
+- balance-sheet and cash-flow checks such as current ratio, debt-to-equity, and free cash flow
+- a long-term summary with strengths, risks, and a score
+
+If the fundamentals provider needs a different ticker format than your trading symbol, pass it in `stock.fundamental_symbol`.
+
+## Feedback Loop and Agent Memory
+
+The repo now supports a persistent feedback loop for predictions:
+
+1. Store a prediction with `POST /api/v1/feedback/predictions/store`
+2. Review it after the market move with `POST /api/v1/feedback/predictions/review`
+3. Read the learned memory with `POST /api/v1/feedback/memory`
+
+What it does:
+
+- saves each prediction to `feedback_data/predictions/`
+- saves each review to `feedback_data/reviews/`
+- updates `feedback_data/agent_memory.json`
+- analyzes whether company news, announcements, macro cues, or event risk explained a wrong call
+- returns memory guidance that is also attached to `/api/v1/context/stock`, `/api/v1/context/watchlist`, and `/api/v1/fundamentals/company`

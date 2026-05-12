@@ -4,11 +4,16 @@ from datetime import datetime
 
 from fastapi import FastAPI, HTTPException
 
+from stock_agents.feedback import get_agent_memory, get_agent_memory_guidance, review_prediction, store_prediction
+from stock_agents.fundamentals import analyze_company_fundamentals
 from stock_agents.model_service import get_ohlcv_model_info, predict_ohlcv_model, train_ohlcv_model
 from stock_agents.models import (
+    AgentMemoryRequest,
     ModelInfoRequest,
     ModelPredictRequest,
     ModelTrainRequest,
+    PredictionReviewRequest,
+    PredictionStoreRequest,
     StockAnalysisRequest,
     TimeWindowRequest,
     WatchlistAnalysisRequest,
@@ -124,12 +129,44 @@ def macro_cues(request: TimeWindowRequest) -> dict:
 
 @app.post("/api/v1/context/stock")
 def stock_context(request: StockAnalysisRequest) -> dict:
-    return analyze_stock(request.stock, request.options)
+    result = analyze_stock(request.stock, request.options)
+    result["memory_guidance"] = get_agent_memory_guidance(request.stock)
+    return result
 
 
 @app.post("/api/v1/context/watchlist")
 def watchlist_context(request: WatchlistAnalysisRequest) -> dict:
-    return analyze_watchlist(request.stocks, request.options)
+    result = analyze_watchlist(request.stocks, request.options)
+    for input_stock, output_stock in zip(request.stocks, result.get("stocks", []), strict=False):
+        output_stock["memory_guidance"] = get_agent_memory_guidance(input_stock)
+    return result
+
+
+@app.post("/api/v1/fundamentals/company")
+def company_fundamentals(request: StockAnalysisRequest) -> dict:
+    result = analyze_company_fundamentals(request.stock, request.options)
+    result["memory_guidance"] = get_agent_memory_guidance(request.stock)
+    return result
+
+
+@app.post("/api/v1/feedback/predictions/store")
+def feedback_store_prediction(request: PredictionStoreRequest) -> dict:
+    return store_prediction(request)
+
+
+@app.post("/api/v1/feedback/predictions/review")
+def feedback_review_prediction(request: PredictionReviewRequest) -> dict:
+    try:
+        return review_prediction(request)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except (ValueError, OSError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/api/v1/feedback/memory")
+def feedback_memory(request: AgentMemoryRequest) -> dict:
+    return get_agent_memory(request)
 
 
 @app.post("/api/v1/model/train")
