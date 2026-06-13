@@ -5,4 +5,9 @@ Summary: FastAPI service for India-focused stock news, announcements, and global
 Requires-Python: >=3.11
 Requires-Dist: fastapi<1.0.0,>=0.115.0
 Requires-Dist: uvicorn<1.0.0,>=0.30.0
+Requires-Dist: numpy<3.0.0,>=1.26.0
+Requires-Dist: pypdf<7.0.0,>=5.0.0
+Requires-Dist: tensorflow<3.0.0,>=2.16.0
 Provides-Extra: dev
+Provides-Extra: ml
+Requires-Dist: tensorflow<3.0.0,>=2.16.0; extra == "ml"

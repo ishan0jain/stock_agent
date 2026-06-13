@@ -1,0 +1,682 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Train, inspect, predict, and review autonomous stock agents.">
+  <title>Stock Agents Control Room</title>
+  <link rel="stylesheet" href="/ui/assets/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="Stock Agents home">
+      <span class="brand-mark">SA</span>
+      <span>
+        <strong>Stock Agents</strong>
+        <small>Autonomous prediction control room</small>
+      </span>
+    </a>
+    <nav aria-label="Primary navigation">
+      <a href="#flow">Flow</a>
+      <a href="#data">Data</a>
+      <a href="#documents">Documents</a>
+      <a href="#training">Train</a>
+      <a href="#prediction">Predict</a>
+      <a href="#review">Review</a>
+      <a class="nav-docs" href="/docs" target="_blank" rel="noreferrer">API Docs</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Agentic market intelligence</p>
+        <h1>From raw candles to an explainable prediction.</h1>
+        <p class="hero-text">
+          Upload OHLCV history, train a CNN-LSTM model, inspect its test results,
+          run the autonomous agent ensemble, and compare predictions with actual outcomes.
+        </p>
+        <div class="hero-actions">
+          <a class="button primary" href="#data">Start with data</a>
+          <a class="button ghost" href="#flow">Understand the flow</a>
+        </div>
+      </div>
+      <div class="hero-panel">
+        <div class="system-status">
+          <span class="status-dot" id="health-dot"></span>
+          <span id="health-text">Checking API...</span>
+        </div>
+        <div class="hero-metric">
+          <span>Specialist agents</span>
+          <strong>5</strong>
+        </div>
+        <div class="hero-metric">
+          <span>Decision output</span>
+          <strong>1</strong>
+        </div>
+        <div class="hero-metric">
+          <span>Learning mode</span>
+          <strong>Review-driven</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="flow">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">How it works</p>
+          <h2>One orchestrator, specialized responsibilities</h2>
+        </div>
+        <p>
+          The orchestrator runs each agent, reconciles disagreement, applies historical
+          accuracy, and stores the final decision for later review.
+        </p>
+      </div>
+
+      <div class="architecture-chart" aria-label="Agentic prediction architecture flow chart">
+        <div class="architecture-label">Input and persistent knowledge</div>
+        <div class="architecture-row architecture-inputs">
+          <div class="architecture-node">
+            <span>Market history</span>
+            <strong>OHLCV data</strong>
+          </div>
+          <div class="architecture-node">
+            <span>Live intelligence</span>
+            <strong>News and macro APIs</strong>
+          </div>
+          <div class="architecture-node">
+            <span>Company quality</span>
+            <strong>Fundamental data</strong>
+          </div>
+          <div class="architecture-node highlighted">
+            <span>Knowledge base</span>
+            <strong>Financial documents</strong>
+          </div>
+          <div class="architecture-node">
+            <span>Learning history</span>
+            <strong>Feedback memory</strong>
+          </div>
+        </div>
+
+        <div class="architecture-arrows" aria-hidden="true">
+          <span>down</span><span>down</span><span>down</span><span>down</span><span>down</span>
+        </div>
+
+        <div class="architecture-label">Specialist reasoning</div>
+        <div class="architecture-row architecture-agents">
+          <div class="architecture-node agent-node"><strong>Technical agent</strong><span>CNN-LSTM</span></div>
+          <div class="architecture-node agent-node"><strong>Context agent</strong><span>Sentiment and events</span></div>
+          <div class="architecture-node agent-node"><strong>Fundamental agent</strong><span>Financial scoring</span></div>
+          <div class="architecture-node agent-node highlighted"><strong>Document RAG agent</strong><span>Retrieve and cite</span></div>
+          <div class="architecture-node agent-node"><strong>Memory agent</strong><span>Recalibrate weights</span></div>
+        </div>
+
+        <div class="converge-lines" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+
+        <div class="architecture-decision">
+          <div class="architecture-node decision-node">
+            <span>Weighted evidence fusion</span>
+            <strong>Decision agent</strong>
+            <small>Direction + expected move + confidence + citations</small>
+          </div>
+        </div>
+
+        <div class="chart-down-arrow" aria-hidden="true">down</div>
+
+        <div class="architecture-row architecture-actions">
+          <div class="architecture-node action-node">
+            <span>Persist</span>
+            <strong>Prediction record</strong>
+          </div>
+          <div class="horizontal-arrow" aria-hidden="true">to</div>
+          <div class="architecture-node action-node">
+            <span>Observe</span>
+            <strong>Actual market result</strong>
+          </div>
+          <div class="horizontal-arrow" aria-hidden="true">to</div>
+          <div class="architecture-node action-node highlighted">
+            <span>Learn</span>
+            <strong>Feedback and memory update</strong>
+          </div>
+        </div>
+        <div class="feedback-loop">
+          <span>Memory changes future technical, context, and document-agent weights</span>
+          <strong>Feedback loop returns to the next autonomous run</strong>
+        </div>
+      </div>
+
+      <div class="flow-grid">
+        <article class="flow-card accent-blue">
+          <span class="step-number">01</span>
+          <h3>Memory agent</h3>
+          <p>Loads reviewed outcomes, accuracy by source, and recurring failure patterns.</p>
+          <span class="flow-tag">Recalibrates weights</span>
+        </article>
+        <article class="flow-card accent-cyan">
+          <span class="step-number">02</span>
+          <h3>Technical agent</h3>
+          <p>Runs the CNN-LSTM forecast and evaluates confidence from saved test metrics.</p>
+          <span class="flow-tag">42% base weight</span>
+        </article>
+        <article class="flow-card accent-gold">
+          <span class="step-number">03</span>
+          <h3>Context agent</h3>
+          <p>Scores news, sentiment, company events, exchange filings, macro and global cues.</p>
+          <span class="flow-tag">28% base weight</span>
+        </article>
+        <article class="flow-card accent-violet">
+          <span class="step-number">04</span>
+          <h3>Fundamental agent</h3>
+          <p>Assesses valuation, growth, quality, leverage, liquidity and cash generation.</p>
+          <span class="flow-tag">15% base weight</span>
+        </article>
+        <article class="flow-card accent-teal">
+          <span class="step-number">05</span>
+          <h3>Document RAG agent</h3>
+          <p>Retrieves relevant annual-report, transcript, presentation, and filing evidence with citations.</p>
+          <span class="flow-tag">15% base weight</span>
+        </article>
+        <article class="flow-card decision-card">
+          <span class="step-number">06</span>
+          <h3>Decision agent</h3>
+          <p>Normalizes signals, adjusts weights, measures agreement and produces one forecast.</p>
+          <span class="flow-tag">Direction + change + confidence</span>
+        </article>
+        <article class="flow-card action-card">
+          <span class="step-number">07</span>
+          <h3>Action agent</h3>
+          <p>Stores the prediction so an actual result can update memory after the market move.</p>
+          <span class="flow-tag">Closes the learning loop</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="section workspace-section" id="data">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Step 1</p>
+          <h2>Upload OHLCV history</h2>
+        </div>
+        <p>
+          The file stays in your browser until you start training or prediction.
+          Supported formats include a candle array and Upstox-style JSON.
+        </p>
+      </div>
+
+      <div class="data-layout">
+        <div class="upload-card">
+          <input type="file" id="ohlcv-file" accept=".json,application/json" hidden>
+          <button class="drop-zone" id="drop-zone" type="button">
+            <span class="upload-icon">JSON</span>
+            <strong>Drop an OHLCV file here</strong>
+            <span>or click to browse</span>
+            <small>Timestamp, open, high, low, close, volume</small>
+          </button>
+          <div class="inline-status" id="file-status">No data file selected.</div>
+        </div>
+
+        <div class="dataset-card">
+          <div class="card-title-row">
+            <h3>Dataset inspection</h3>
+            <span class="pill muted" id="dataset-state">Waiting</span>
+          </div>
+          <div class="dataset-metrics">
+            <div><span>Candles</span><strong id="dataset-count">-</strong></div>
+            <div><span>First date</span><strong id="dataset-first">-</strong></div>
+            <div><span>Last date</span><strong id="dataset-last">-</strong></div>
+            <div><span>Latest close</span><strong id="dataset-close">-</strong></div>
+          </div>
+          <div class="format-note">
+            <strong>Expected candle</strong>
+            <code>["2026-05-07T00:00:00+0530", 100, 105, 98, 103.5, 250000, 0]</code>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section workspace-section" id="documents">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Knowledge layer</p>
+          <h2>Add financial documents to RAG</h2>
+        </div>
+        <p>
+          Upload annual reports, result documents, transcripts, presentations, filings,
+          or credit-rating reports. Documents are indexed by stock symbol and retrieved
+          with citations during autonomous prediction.
+        </p>
+      </div>
+
+      <div class="workbench document-workbench">
+        <form class="control-panel" id="document-form">
+          <div class="panel-heading">
+            <h3>Index a document</h3>
+            <span class="pill">Local RAG</span>
+          </div>
+          <div class="field-grid">
+            <label>
+              <span>Stock symbol</span>
+              <input id="document-symbol" value="RELIANCE" required>
+            </label>
+            <label>
+              <span>Company name</span>
+              <input id="document-company" value="Reliance Industries" required>
+            </label>
+          </div>
+          <label>
+            <span>Document type</span>
+            <select id="document-type">
+              <option value="annual_report">Annual report</option>
+              <option value="quarterly_result">Quarterly result</option>
+              <option value="earnings_transcript">Earnings transcript</option>
+              <option value="investor_presentation">Investor presentation</option>
+              <option value="exchange_filing">Exchange filing</option>
+              <option value="credit_rating">Credit rating</option>
+              <option value="other">Other</option>
+            </select>
+          </label>
+          <label>
+            <span>Document title <small>(optional)</small></span>
+            <input id="document-title" placeholder="FY 2025-26 Annual Report">
+          </label>
+          <label>
+            <span>Published date <small>(optional)</small></span>
+            <input id="document-date" type="date">
+          </label>
+          <input
+            type="file"
+            id="financial-document-file"
+            accept=".pdf,.txt,.md,.csv,.json,.html,.htm,application/pdf,text/plain"
+            hidden
+          >
+          <button class="document-drop-zone" id="document-drop-zone" type="button">
+            <span class="upload-icon">DOC</span>
+            <strong>Choose a financial document</strong>
+            <span>PDF, TXT, MD, CSV, JSON, or HTML up to 25 MB</span>
+          </button>
+          <div class="inline-status" id="document-file-status">No financial document selected.</div>
+          <button class="button primary full" id="document-index-button" type="submit">Index document</button>
+          <div class="operation-status" id="document-index-status" aria-live="polite"></div>
+        </form>
+
+        <div class="results-panel document-results-panel">
+          <div class="card-title-row">
+            <div>
+              <h3>Stock knowledge base</h3>
+              <p>Indexed documents and retrieval evidence for the selected symbol.</p>
+            </div>
+            <button class="copy-button" id="refresh-documents-button" type="button">Refresh</button>
+          </div>
+
+          <div class="document-list" id="document-list">
+            <div class="mini-empty">No indexed documents loaded.</div>
+          </div>
+
+          <form class="rag-query-form" id="rag-query-form">
+            <label>
+              <span>Ask the document knowledge base</span>
+              <textarea id="rag-query" rows="3">What do the latest documents say about revenue, margins, cash flow, debt, guidance, demand, capex, and material risks?</textarea>
+            </label>
+            <div class="button-row">
+              <button class="button ghost" id="rag-query-button" type="submit">Retrieve evidence</button>
+              <span class="operation-status" id="rag-query-status" aria-live="polite"></span>
+            </div>
+          </form>
+
+          <div class="rag-summary" id="rag-summary" hidden>
+            <div class="metric-grid">
+              <div class="metric-card"><span>Documents</span><strong id="rag-document-count">-</strong></div>
+              <div class="metric-card"><span>Chunks used</span><strong id="rag-chunk-count">-</strong></div>
+              <div class="metric-card"><span>Signal score</span><strong id="rag-signal-score">-</strong></div>
+              <div class="metric-card"><span>Confidence</span><strong id="rag-confidence">-</strong></div>
+            </div>
+            <p id="rag-summary-text"></p>
+            <div class="citation-list" id="rag-citations"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section workspace-section" id="training">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Step 2</p>
+          <h2>Train and inspect the model</h2>
+        </div>
+        <p>
+          Training is synchronous in the current API. Keep this page open while TensorFlow runs.
+          Early stopping may finish before the requested epoch count.
+        </p>
+      </div>
+
+      <div class="workbench">
+        <form class="control-panel" id="training-form">
+          <div class="panel-heading">
+            <h3>Training configuration</h3>
+            <span class="pill">CNN-LSTM</span>
+          </div>
+
+          <label>
+            <span>Stock name</span>
+            <input id="train-stock" value="RELIANCE" required>
+          </label>
+          <label>
+            <span>Model directory</span>
+            <input id="train-model-dir" value="trend_analyzer/models/reliance" required>
+          </label>
+
+          <div class="field-grid">
+            <label>
+              <span>Target</span>
+              <select id="train-target">
+                <option value="close">Close</option>
+                <option value="open">Open</option>
+                <option value="high">High</option>
+                <option value="low">Low</option>
+              </select>
+            </label>
+            <label>
+              <span>Window</span>
+              <input id="train-window" type="number" min="5" max="365" value="30">
+            </label>
+            <label>
+              <span>Horizon</span>
+              <input id="train-horizon" type="number" min="1" max="30" value="5">
+            </label>
+            <label>
+              <span>Epochs</span>
+              <input id="train-epochs" type="number" min="1" max="1000" value="50">
+            </label>
+            <label>
+              <span>Batch size</span>
+              <input id="train-batch" type="number" min="1" max="1024" value="32">
+            </label>
+            <label>
+              <span>Train ratio</span>
+              <input id="train-ratio" type="number" min="0.1" max="0.95" step="0.05" value="0.8">
+            </label>
+          </div>
+
+          <div class="button-row">
+            <button class="button primary" id="train-button" type="submit">Start training</button>
+            <button class="button ghost" id="load-results-button" type="button">Load saved results</button>
+          </div>
+          <div class="operation-status" id="training-status" aria-live="polite"></div>
+        </form>
+
+        <div class="results-panel">
+          <div class="empty-state" id="training-empty">
+            <span class="empty-icon">UP</span>
+            <h3>Training results appear here</h3>
+            <p>Upload data and train a model, or load artifacts from an existing model directory.</p>
+          </div>
+
+          <div id="training-results" hidden>
+            <div class="metric-grid">
+              <div class="metric-card"><span>MAE</span><strong id="metric-mae">-</strong></div>
+              <div class="metric-card"><span>RMSE</span><strong id="metric-rmse">-</strong></div>
+              <div class="metric-card"><span>MAPE</span><strong id="metric-mape">-</strong></div>
+              <div class="metric-card"><span>Test samples</span><strong id="metric-samples">-</strong></div>
+            </div>
+
+            <div class="chart-card">
+              <div class="card-title-row">
+                <div>
+                  <h3>Training history</h3>
+                  <p>Loss by epoch. Validation loss indicates generalization.</p>
+                </div>
+                <div class="legend">
+                  <span><i class="legend-line blue"></i>Train</span>
+                  <span><i class="legend-line gold"></i>Validation</span>
+                </div>
+              </div>
+              <canvas id="history-chart" height="260"></canvas>
+            </div>
+
+            <div class="chart-card">
+              <div class="card-title-row comparison-heading">
+                <div>
+                  <h3>Predicted vs actual</h3>
+                  <p>Choose a chronological test window to inspect each forecast horizon.</p>
+                </div>
+                <select id="test-sample-select" aria-label="Test sample"></select>
+              </div>
+              <canvas id="comparison-chart" height="280"></canvas>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr><th>Date</th><th>Actual</th><th>Predicted</th><th>Error</th><th>Error %</th></tr>
+                  </thead>
+                  <tbody id="comparison-table"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section workspace-section" id="prediction">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Step 3</p>
+          <h2>Run the autonomous ensemble</h2>
+        </div>
+        <p>
+          The same uploaded OHLCV data is combined with current context, fundamentals,
+          and reviewed historical accuracy.
+        </p>
+      </div>
+
+      <div class="workbench">
+        <form class="control-panel" id="prediction-form">
+          <div class="panel-heading">
+            <h3>Stock identity</h3>
+            <span class="pill live">Agentic</span>
+          </div>
+          <div class="field-grid">
+            <label>
+              <span>Symbol</span>
+              <input id="predict-symbol" value="RELIANCE" required>
+            </label>
+            <label>
+              <span>Company name</span>
+              <input id="predict-name" value="Reliance Industries" required>
+            </label>
+          </div>
+          <label>
+            <span>Aliases, comma separated</span>
+            <input id="predict-aliases" value="RIL, Reliance Industries">
+          </label>
+          <div class="field-grid">
+            <label>
+              <span>Sector</span>
+              <input id="predict-sector" value="Oil &amp; Gas">
+            </label>
+            <label>
+              <span>NSE symbol</span>
+              <input id="predict-nse" value="RELIANCE">
+            </label>
+          </div>
+          <label>
+            <span>Sector keywords, comma separated</span>
+            <input id="predict-keywords" value="refining, petrochemicals, telecom, retail">
+          </label>
+          <label>
+            <span>Fundamental provider symbol</span>
+            <input id="predict-fundamental-symbol" value="RELIANCE.NSE">
+          </label>
+          <label>
+            <span>Model directory</span>
+            <input id="predict-model-dir" value="trend_analyzer/models/reliance" required>
+          </label>
+          <label>
+            <span>Reference price <small>(optional; latest target value is the default)</small></span>
+            <input id="predict-reference" type="number" min="0.01" step="0.01">
+          </label>
+          <div class="check-row">
+            <label class="checkbox"><input id="include-fundamentals" type="checkbox" checked><span>Run fundamental agent</span></label>
+            <label class="checkbox"><input id="include-documents" type="checkbox" checked><span>Run document RAG agent</span></label>
+            <label class="checkbox"><input id="auto-store" type="checkbox" checked><span>Store prediction for review</span></label>
+          </div>
+          <label>
+            <span>Document retrieval question <small>(optional)</small></span>
+            <input id="predict-rag-query" placeholder="Latest outlook, risks, margins, cash flow and guidance">
+          </label>
+          <button class="button primary full" id="predict-button" type="submit">Run autonomous prediction</button>
+          <div class="operation-status" id="prediction-status" aria-live="polite"></div>
+        </form>
+
+        <div class="results-panel">
+          <div class="empty-state" id="prediction-empty">
+            <span class="empty-icon">AI</span>
+            <h3>The decision room is ready</h3>
+            <p>Run the ensemble to inspect agent status, calibrated weights, rationale and forecast.</p>
+          </div>
+
+          <div id="prediction-results" hidden>
+            <div class="decision-banner">
+              <div>
+                <span>Final direction</span>
+                <strong id="decision-direction">-</strong>
+              </div>
+              <div>
+                <span>Expected move</span>
+                <strong id="decision-change">-</strong>
+              </div>
+              <div>
+                <span>Confidence</span>
+                <strong id="decision-confidence">-</strong>
+              </div>
+              <div>
+                <span>Agreement</span>
+                <strong id="decision-agreement">-</strong>
+              </div>
+            </div>
+
+            <div class="agent-grid" id="agent-grid"></div>
+
+            <div class="chart-card" id="prediction-document-evidence" hidden>
+              <div class="card-title-row">
+                <div>
+                  <h3>Financial-document evidence</h3>
+                  <p>Citations retrieved by the document RAG agent for this decision.</p>
+                </div>
+              </div>
+              <div class="citation-list" id="prediction-citation-list"></div>
+            </div>
+
+            <div class="chart-card">
+              <div class="card-title-row">
+                <div>
+                  <h3>Signal contribution</h3>
+                  <p>Final weights after agent confidence and memory calibration.</p>
+                </div>
+                <span class="pill muted" id="coverage-pill">- coverage</span>
+              </div>
+              <div class="contribution-list" id="contribution-list"></div>
+            </div>
+
+            <div class="chart-card">
+              <div class="card-title-row">
+                <div>
+                  <h3>Technical forecast</h3>
+                  <p>Raw future values produced by the saved CNN-LSTM model.</p>
+                </div>
+              </div>
+              <canvas id="forecast-chart" height="260"></canvas>
+            </div>
+
+            <div class="rationale-card">
+              <h3>Decision rationale</h3>
+              <ul id="decision-rationale"></ul>
+            </div>
+
+            <div class="prediction-id-card">
+              <span>Prediction ID</span>
+              <code id="prediction-id">Not stored</code>
+              <button class="copy-button" id="copy-prediction-id" type="button">Copy</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section workspace-section" id="review">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Step 4</p>
+          <h2>Compare prediction with reality</h2>
+        </div>
+        <p>
+          After the predicted trading day, submit the actual close. The system records
+          direction accuracy, price error and lessons for future predictions.
+        </p>
+      </div>
+
+      <div class="workbench review-workbench">
+        <form class="control-panel" id="review-form">
+          <label>
+            <span>Prediction ID</span>
+            <input id="review-prediction-id" required placeholder="Generated after autonomous prediction">
+          </label>
+          <div class="field-grid">
+            <label>
+              <span>Previous close</span>
+              <input id="review-previous-close" type="number" min="0.01" step="0.01" required>
+            </label>
+            <label>
+              <span>Actual close</span>
+              <input id="review-actual-close" type="number" min="0.01" step="0.01" required>
+            </label>
+          </div>
+          <label>
+            <span>Actual date <small>(optional)</small></span>
+            <input id="review-date" type="date">
+          </label>
+          <label class="checkbox">
+            <input id="review-context" type="checkbox">
+            <span>Fetch context again to diagnose a miss</span>
+          </label>
+          <button class="button primary full" id="review-button" type="submit">Compare and update memory</button>
+          <div class="operation-status" id="review-status" aria-live="polite"></div>
+        </form>
+
+        <div class="results-panel">
+          <div class="empty-state" id="review-empty">
+            <span class="empty-icon">VS</span>
+            <h3>Actual comparison appears here</h3>
+            <p>The review records whether direction was correct and how far the expected move missed.</p>
+          </div>
+          <div id="review-results" hidden>
+            <div class="review-outcome" id="review-outcome">
+              <span id="review-outcome-label">-</span>
+              <strong id="review-outcome-title">-</strong>
+            </div>
+            <div class="metric-grid">
+              <div class="metric-card"><span>Predicted move</span><strong id="review-predicted">-</strong></div>
+              <div class="metric-card"><span>Actual move</span><strong id="review-actual">-</strong></div>
+              <div class="metric-card"><span>Move error</span><strong id="review-error">-</strong></div>
+              <div class="metric-card"><span>Memory accuracy</span><strong id="review-accuracy">-</strong></div>
+            </div>
+            <div class="comparison-bars" id="review-bars"></div>
+            <div class="rationale-card">
+              <h3>Diagnosis</h3>
+              <ul id="review-diagnosis"></ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>Stock Agents Control Room</span>
+    <span>Predictions are analytical outputs, not financial advice.</span>
+  </footer>
+
+  <script src="/ui/assets/app.js" defer></script>
+</body>
+</html>

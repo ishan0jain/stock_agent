@@ -6,6 +6,9 @@ requires-python = ">=3.11"
 dependencies = [
   "fastapi>=0.115.0,<1.0.0",
   "uvicorn>=0.30.0,<1.0.0",
+  "numpy>=1.26.0,<3.0.0",
+  "pypdf>=5.0.0,<7.0.0",
+  "tensorflow>=2.16.0,<3.0.0",
 ]
 
 [project.optional-dependencies]
@@ -16,3 +19,6 @@ ml = [
 
 [tool.setuptools.packages.find]
 include = ["stock_agents*", "trend_analyzer*"]
+
+[tool.setuptools.package-data]
+stock_agents = ["ui/*.html", "ui/*.css", "ui/*.js"]

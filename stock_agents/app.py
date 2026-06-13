@@ -1,14 +1,32 @@
 from __future__ import annotations
 
 from datetime import datetime
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 
+from stock_agents.agentic_prediction import run_autonomous_prediction
 from stock_agents.feedback import get_agent_memory, get_agent_memory_guidance, review_prediction, store_prediction
+from stock_agents.financial_documents import (
+    ingest_financial_document,
+    list_financial_documents,
+    query_financial_documents,
+)
 from stock_agents.fundamentals import analyze_company_fundamentals
-from stock_agents.model_service import get_ohlcv_model_info, predict_ohlcv_model, train_ohlcv_model
+from stock_agents.model_service import (
+    get_ohlcv_model_info,
+    get_ohlcv_model_results,
+    predict_ohlcv_model,
+    train_ohlcv_model,
+)
 from stock_agents.models import (
     AgentMemoryRequest,
+    AutonomousPredictionRequest,
+    FinancialDocumentIngestRequest,
+    FinancialDocumentListRequest,
+    FinancialDocumentQueryRequest,
     ModelInfoRequest,
     ModelPredictRequest,
     ModelTrainRequest,
@@ -32,14 +50,17 @@ from stock_agents.service import (
 )
 
 
+UI_DIR = Path(__file__).resolve().parent / "ui"
+
 app = FastAPI(
-    title="Stock Agents API",
+    title="Autonomous Stock Agents API",
     version="0.1.0",
     description=(
-        "India-focused stock context APIs covering company news, sector news, macro news, "
-        "exchange announcements, global markets, and commodity/currency/bond cues."
+        "Agentic stock analysis combining OHLCV forecasting, market context, fundamentals, "
+        "and feedback-memory calibration."
     ),
 )
+app.mount("/ui/assets", StaticFiles(directory=UI_DIR), name="ui-assets")
 
 
 def request_since(request: StockAnalysisRequest | TimeWindowRequest) -> tuple[dict, datetime]:
@@ -50,6 +71,16 @@ def request_since(request: StockAnalysisRequest | TimeWindowRequest) -> tuple[di
     else:
         since = since.astimezone(IST)
     return window.__dict__, since
+
+
+@app.get("/", include_in_schema=False)
+def root() -> RedirectResponse:
+    return RedirectResponse(url="/ui")
+
+
+@app.get("/ui", include_in_schema=False)
+def ui_console() -> FileResponse:
+    return FileResponse(UI_DIR / "index.html")
 
 
 @app.get("/health")
@@ -169,6 +200,40 @@ def feedback_memory(request: AgentMemoryRequest) -> dict:
     return get_agent_memory(request)
 
 
+@app.post("/api/v1/rag/documents/ingest")
+def rag_document_ingest(request: FinancialDocumentIngestRequest) -> dict:
+    try:
+        return ingest_financial_document(request)
+    except (ValueError, OSError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/api/v1/rag/documents/query")
+def rag_document_query(request: FinancialDocumentQueryRequest) -> dict:
+    try:
+        return query_financial_documents(request)
+    except (ValueError, OSError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/api/v1/rag/documents/list")
+def rag_document_list(request: FinancialDocumentListRequest) -> dict:
+    try:
+        return list_financial_documents(request)
+    except (ValueError, OSError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/api/v1/predictions/autonomous")
+def autonomous_prediction(request: AutonomousPredictionRequest) -> dict:
+    try:
+        return run_autonomous_prediction(request)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except (ValueError, OSError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
 @app.post("/api/v1/model/train")
 def model_train(request: ModelTrainRequest) -> dict:
     try:
@@ -214,6 +279,16 @@ def model_predict(request: ModelPredictRequest) -> dict:
 def model_info(request: ModelInfoRequest) -> dict:
     try:
         return get_ohlcv_model_info(request.model_dir)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except (ValueError, OSError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/api/v1/model/results")
+def model_results(request: ModelInfoRequest) -> dict:
+    try:
+        return get_ohlcv_model_results(request.model_dir)
     except FileNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except (ValueError, OSError) as exc:

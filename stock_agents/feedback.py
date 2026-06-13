@@ -24,6 +24,8 @@ PATTERN_MESSAGES: dict[str, str] = {
     "macro_tailwind_underweighted": "Macro and global cues should trim short bias when they turn positive.",
     "event_risk_underweighted": "Major corporate events should widen the expected move band and lower confidence.",
     "context_disagreed_with_prediction": "When context and model direction disagree, lower size or wait for confirmation.",
+    "document_risk_underweighted": "Negative financial-document evidence should reduce bullish conviction.",
+    "document_tailwind_underweighted": "Supportive financial-document evidence should reduce bearish conviction.",
     "move_magnitude_underestimated": "Recent logic is underestimating move size; widen expected ranges.",
     "move_magnitude_overestimated": "Recent logic is overestimating move size; trim expected ranges.",
     "direction_miss": "Direction misses need lower confidence and stronger confirmation rules.",
@@ -55,6 +57,7 @@ def store_prediction(request: PredictionStoreRequest) -> dict[str, Any]:
         "confidence": request.confidence,
         "model_dir": request.model_dir,
         "notes": request.notes,
+        "evidence_context": request.evidence_context,
         "review_status": "pending",
     }
     write_json(PREDICTIONS_DIR / f"{prediction_id}.json", record)
@@ -89,6 +92,9 @@ def review_prediction(request: PredictionReviewRequest) -> dict[str, Any]:
         context_options = build_review_context_options(request.options, prediction, reviewed_date)
         context_report = analyze_stock(stock, context_options)
         context_summary = summarize_context_report(context_report)
+    document_score = to_float(
+        prediction.get("evidence_context", {}).get("financial_documents", {}).get("signal_score")
+    )
 
     diagnosis = diagnose_prediction_miss(
         predicted_direction=predicted_direction,
@@ -96,10 +102,12 @@ def review_prediction(request: PredictionReviewRequest) -> dict[str, Any]:
         predicted_change_pct=predicted_change_pct,
         actual_change_pct=actual_change_pct,
         context_summary=context_summary,
+        document_score=document_score,
     )
 
     review = {
         "prediction_id": request.prediction_id,
+        "prediction_source": prediction.get("prediction_source", "unknown"),
         "reviewed_at": datetime.now(IST).isoformat(),
         "actual_for_date": reviewed_date,
         "predicted_direction": predicted_direction,
@@ -112,6 +120,7 @@ def review_prediction(request: PredictionReviewRequest) -> dict[str, Any]:
         "diagnosis": diagnosis,
         "analyst_notes": request.analyst_notes,
         "context_summary": context_summary,
+        "document_score": document_score,
     }
     write_json(REVIEWS_DIR / f"{request.prediction_id}.json", review)
 
@@ -156,6 +165,7 @@ def build_memory_guidance(stock: StockInput, memory: dict[str, Any]) -> dict[str
         "accuracy": accuracy,
         "failure_patterns": pattern_counts,
         "lessons": lessons,
+        "source_metrics": build_source_metrics(stock_memory.get("source_metrics", {})),
         "global_review_count": global_memory.get("review_count", 0),
         "updated_at": memory.get("updated_at"),
     }
@@ -174,6 +184,7 @@ def update_agent_memory(stock: StockInput, review: dict[str, Any]) -> dict[str, 
             "review_count": 0,
             "correct_count": 0,
             "failure_patterns": {},
+            "source_metrics": {},
             "recent_reviews": [],
         },
     )
@@ -188,8 +199,13 @@ def update_agent_memory(stock: StockInput, review: dict[str, Any]) -> dict[str, 
         increment_pattern(global_memory["failure_patterns"], pattern_key)
         increment_pattern(stock_memory["failure_patterns"], pattern_key)
 
+    prediction_source = str(review.get("prediction_source") or "unknown")
+    update_source_metric(global_memory.setdefault("source_metrics", {}), prediction_source, review)
+    update_source_metric(stock_memory.setdefault("source_metrics", {}), prediction_source, review)
+
     summary_row = {
         "prediction_id": review["prediction_id"],
+        "prediction_source": prediction_source,
         "actual_for_date": review["actual_for_date"],
         "outcome": review["outcome"],
         "primary_reason": review["diagnosis"]["reasons"][0] if review["diagnosis"]["reasons"] else None,
@@ -208,6 +224,7 @@ def diagnose_prediction_miss(
     predicted_change_pct: float | None,
     actual_change_pct: float | None,
     context_summary: dict[str, Any] | None,
+    document_score: float | None = None,
 ) -> dict[str, Any]:
     patterns: list[str] = []
     reasons: list[str] = []
@@ -275,6 +292,14 @@ def diagnose_prediction_miss(
             ):
                 patterns.append("context_disagreed_with_prediction")
                 reasons.append("The aggregated news context disagreed with the prediction direction.")
+
+    if has_direction_miss and document_score is not None:
+        if predicted_direction == "up" and document_score <= -0.15:
+            patterns.append("document_risk_underweighted")
+            reasons.append("Retrieved financial documents contained material downside evidence.")
+        elif predicted_direction == "down" and document_score >= 0.15:
+            patterns.append("document_tailwind_underweighted")
+            reasons.append("Retrieved financial documents contained material supportive evidence.")
 
     return {
         "patterns": dedupe_preserve_order(patterns),
@@ -436,6 +461,28 @@ def load_memory() -> dict[str, Any]:
 
 def increment_pattern(counter: dict[str, int], key: str) -> None:
     counter[key] = int(counter.get(key, 0)) + 1
+
+
+def update_source_metric(source_metrics: dict[str, Any], source: str, review: dict[str, Any]) -> None:
+    metric = source_metrics.setdefault(source, {"review_count": 0, "correct_count": 0})
+    metric["review_count"] = int(metric.get("review_count", 0)) + 1
+    if review.get("direction_correct"):
+        metric["correct_count"] = int(metric.get("correct_count", 0)) + 1
+
+
+def build_source_metrics(source_metrics: dict[str, Any]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for source, raw_metric in source_metrics.items():
+        if not isinstance(raw_metric, dict):
+            continue
+        review_count = int(raw_metric.get("review_count", 0))
+        correct_count = int(raw_metric.get("correct_count", 0))
+        result[source] = {
+            "review_count": review_count,
+            "correct_count": correct_count,
+            "accuracy": round(correct_count / review_count, 3) if review_count else None,
+        }
+    return result
 
 
 def write_json(path: Path, payload: Any) -> None:

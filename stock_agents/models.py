@@ -166,6 +166,118 @@ class ModelPredictRequest(OhlcvDataSourceRequest):
         return value
 
 
+class AutonomousPredictionRequest(OhlcvDataSourceRequest):
+    stock: StockInput
+    model_dir: str = Field(..., description="Directory containing the trained OHLCV model.")
+    options: AnalysisOptions = Field(default_factory=AnalysisOptions)
+    reference_price: float | None = Field(
+        default=None,
+        gt=0.0,
+        description="Optional latest price. Defaults to the latest matching OHLCV value.",
+    )
+    include_fundamentals: bool = Field(
+        default=True,
+        description="Allow the orchestrator to run the fundamental-analysis agent.",
+    )
+    include_financial_documents: bool = Field(
+        default=True,
+        description="Retrieve stock-scoped financial documents and run the document RAG agent.",
+    )
+    rag_query: str | None = Field(
+        default=None,
+        description="Optional retrieval question. Defaults to a stock-risk and outlook query.",
+    )
+    rag_top_k: int = Field(default=5, ge=1, le=12)
+    auto_store_prediction: bool = Field(
+        default=True,
+        description="Store the final ensemble prediction for later autonomous review.",
+    )
+    output_path: str | None = Field(
+        default=None,
+        description="Optional path where the technical forecast JSON should be written.",
+    )
+
+    @field_validator("model_dir", "output_path")
+    @classmethod
+    def validate_autonomous_paths(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        value = value.strip()
+        if not value:
+            raise ValueError("path values cannot be empty")
+        return value
+
+    @field_validator("rag_query")
+    @classmethod
+    def validate_rag_query(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        value = value.strip()
+        return value or None
+
+
+class FinancialDocumentIngestRequest(BaseModel):
+    stock: StockInput
+    filename: str = Field(..., min_length=1, max_length=255)
+    document_type: Literal[
+        "annual_report",
+        "quarterly_result",
+        "earnings_transcript",
+        "investor_presentation",
+        "exchange_filing",
+        "credit_rating",
+        "other",
+    ] = "other"
+    title: str | None = Field(default=None, max_length=300)
+    published_at: datetime | None = None
+    source_url: str | None = Field(default=None, max_length=2000)
+    text_content: str | None = Field(default=None, description="Extracted plain text.")
+    content_base64: str | None = Field(
+        default=None,
+        description="Base64-encoded PDF, text, Markdown, CSV, or JSON document.",
+    )
+
+    @field_validator("filename")
+    @classmethod
+    def clean_filename(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("filename cannot be empty")
+        return value
+
+    @field_validator("title", "source_url")
+    @classmethod
+    def clean_optional_document_text(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        value = value.strip()
+        return value or None
+
+    @model_validator(mode="after")
+    def validate_document_source(self) -> "FinancialDocumentIngestRequest":
+        if bool(self.text_content) == bool(self.content_base64):
+            raise ValueError("provide exactly one of text_content or content_base64")
+        return self
+
+
+class FinancialDocumentQueryRequest(BaseModel):
+    stock: StockInput
+    query: str = Field(..., min_length=2, max_length=1000)
+    top_k: int = Field(default=5, ge=1, le=20)
+
+    @field_validator("query")
+    @classmethod
+    def clean_query(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("query cannot be empty")
+        return value
+
+
+class FinancialDocumentListRequest(BaseModel):
+    stock: StockInput | None = None
+
+
 class PredictionStoreRequest(BaseModel):
     stock: StockInput
     prediction_made_at: datetime | None = Field(
@@ -190,6 +302,7 @@ class PredictionStoreRequest(BaseModel):
     confidence: float | None = Field(default=None, ge=0.0, le=1.0)
     model_dir: str | None = None
     notes: str | None = None
+    evidence_context: dict[str, Any] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def validate_prediction_payload(self) -> "PredictionStoreRequest":

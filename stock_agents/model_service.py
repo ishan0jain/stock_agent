@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
@@ -72,3 +73,28 @@ def get_ohlcv_model_info(model_dir: str) -> dict[str, Any]:
             "forecast": str(model_path / "forecast.json"),
         },
     }
+
+
+def get_ohlcv_model_results(model_dir: str) -> dict[str, Any]:
+    model_path = Path(model_dir)
+    metadata = load_metadata(model_path)
+    return {
+        "model_dir": str(model_path),
+        "metadata": asdict(metadata),
+        "metrics": read_json_artifact(model_path / "test_metrics.json", required=True),
+        "history": read_json_artifact(model_path / "training_history.json", required=True),
+        "test_predictions": read_json_artifact(
+            model_path / "test_predictions.json",
+            required=True,
+        ),
+        "forecast": read_json_artifact(model_path / "forecast.json", required=False),
+    }
+
+
+def read_json_artifact(path: Path, *, required: bool) -> Any:
+    if not path.exists():
+        if required:
+            raise FileNotFoundError(f"model artifact not found: {path}")
+        return None
+    with path.open("r", encoding="utf-8") as handle:
+        return json.load(handle)
